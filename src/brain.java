@@ -39,7 +39,7 @@ public class brain {
         }
         layer_weight = new weightMatrix[neural_type.length-1];
         for (int layer = 0; layer < layer_weight.length; layer++) {
-            weightMatrix weight = new weightMatrix(neural_type[layer+1],neural_type[layer] );
+            weightMatrix weight = new weightMatrix(neural_type[layer],neural_type[layer+1] );
             layer_weight[layer] = weight;
         }
 
@@ -47,24 +47,45 @@ public class brain {
     public void train(){
         int N =0;
         while (N < maxEpoch && avg_error_n > minError){
-            int dataset_i = (int) (Math.random() * ((dataset.size()) + 1));
-            for (int i = 0; i < neural_type.length; i++) { // each col
 
-
-
-                for (int j = 0; j < neural_type[i]; j++) { // each row
-
-//                    double suminput = sum(i , j);
-//                    double node_output = actication_fn(suminput);
-//                    node[i][j] = node_output;
-
-                }
+            //setup input node
+//            int ran_dataset_i = (int) (Math.random() * ((dataset.size()) + 1));
+            //TODO
+            int ran_dataset_i = 256;
+            for(int input_i = 0 ; input_i < neural_type[0] ; input_i ++){
+                node[0][input_i] = dataset.get(ran_dataset_i)[input_i];
             }
 
+            for(int layer = 0; layer < neural_type.length-1 ; layer++){
+                suminput_node(layer);
+            }
+            System.out.println(node[node.length-1][0]);
+            System.out.println(desired_data.get(ran_dataset_i)[0]);
             N++;
         }
         save_weight();
     }
+
+
+    public void suminput_node(int layer){
+
+        if(node[layer].length != layer_weight[layer].rows){
+            System.out.println("invalid matrix");
+            return;
+        }
+        double  tmpnode[][] = new double[1][neural_type[layer+1]];
+            for (int j = 0; j < neural_type[layer+1] ; j++){
+                double sum=0;
+                for(int k=0;k<node[layer].length;k++)
+                {
+                    sum+=node[layer][k]*layer_weight[layer].data[k][j];
+                }
+                tmpnode[0][j] =sum + biases;
+            }
+            node[layer+1] = tmpnode[0];
+    }
+
+
 
     private void save_weight() {
         //TODO
