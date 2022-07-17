@@ -13,14 +13,14 @@ public class weightMatrix {
         data= new double[rows][cols];
         this.rows=rows;
         this.cols=cols;
-        for(int i=0;i<rows;i++)
+        for(int j=0;j<rows;j++)
         {
-            for(int j=0;j<cols;j++)
+            for(int i=0;i<cols;i++)
             {
                 double ran = 0;
                 while(ran == 0){
                     ran = Math.random()*2-1;
-                    data[i][j]=ran;
+                    data[j][i]=ran;
                 }
             }
         }
