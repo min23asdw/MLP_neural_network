@@ -5,6 +5,9 @@ import java.util.ArrayList;
 
 public class main {
 
+//    private double minValue;
+//    private double maxValue;
+
     public static void main(String[] args) throws IOException {
         ArrayList<Double[]> test_dataset_1 = new ArrayList<>();
         ArrayList<Double[]> test_desired_data_1 = new ArrayList<>();
@@ -17,12 +20,13 @@ public class main {
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String data;
 
-        double maxInput = 0;
-        double minInput =  100000;
-        double maxdesired = 0;
-        double mindesired =  100000;
+//        double maxInput = 0;
+//        double minInput =  100000;
+//        double maxdesired = 0;
+//        double mindesired =  100000;
 
-        for(int tain_i = 0 ; tain_i < 1 ; tain_i ++) {
+//        for(int tain_i = 0 ; tain_i < 1 ; tain_i ++) {
+        int tain_i = 0;
 
             int line_i = 0;
             while ((data = br.readLine()) != null) { // each line
@@ -63,11 +67,23 @@ public class main {
 
                 line_i++;
             }
-        }
+//        }
 
 
-        brain b1 = new brain("521", train_dataset_1 ,train_desired_data_1 ,2000,0.000001);
+        brain b1 = new brain("831", train_dataset_1 ,train_desired_data_1 ,2000,0.000001,0.000000013);
         b1.train();
 
     }
+
+
+    //frac{value - min}{max - min}
+//    public Double[] data_Normalization(Double[] x){
+//        Double[] norm = new Double[x.length];
+//
+//        for (int i = 0; i < x.length; i++) {
+//            norm[i] = x[i]-maxValue / maxValue - minValue;
+//        }
+////        return 1 / (1 + Math.exp(-x));
+//        return  norm;
+//    }
 }
