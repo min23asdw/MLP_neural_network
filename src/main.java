@@ -70,8 +70,10 @@ public class main {
 //        }
 
 
-        brain b1 = new brain("831", train_dataset_1 ,train_desired_data_1 ,2000,0.000001,0.000000013);
+        brain b1 = new brain("85321", train_dataset_1 ,train_desired_data_1 ,50000,0.000001,0.000000013);
         b1.train();
+        System.out.println("test");
+        b1.test(test_dataset_1 , test_desired_data_1 );
 
     }
 

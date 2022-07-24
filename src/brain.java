@@ -23,6 +23,9 @@ public class brain {
     private Double[][]  local_gradient_node  ;
 
 
+    private Matrix[] good_weight  ;
+
+
     public brain(String _neural_type ,ArrayList<Double[]> _train_dataset,ArrayList<Double[]> _train_desired_data  , int _maxEpoch , double _minError , double  _learning_rate){
 
         String[] splitArray = _neural_type.split("");
@@ -61,10 +64,9 @@ public class brain {
         int N =0;
         while (N < maxEpoch){ //&& avg_error_n > minError){
 
-            //setup input node
-//            int ran_dataset_i = (int) (Math.random() * ((train_dataset.size()) ));
-            int ran_dataset_i = 256; // debug
-
+            //setup input data
+            int ran_dataset_i = (int) (Math.random() * ((train_dataset.size()) ));
+//            int ran_dataset_i = 256; // debug
 
             //set dataset value to input node
             for(int input_i = 0 ; input_i < neural_type[0] ; input_i ++){
@@ -146,10 +148,12 @@ public class brain {
 
             }
 
-            System.out.println(train_desired_data.get(ran_dataset_i)[0] + ":"+ node[node.length-1][0] + ":" + (train_desired_data.get(ran_dataset_i)[0] - node[node.length-1][0]) );
+          //  System.out.println(train_desired_data.get(ran_dataset_i)[0] + ":"+ node[node.length-1][0] + ":" + (train_desired_data.get(ran_dataset_i)[0] - node[node.length-1][0]) );
 
             N++; // next epoch
         }
+        System.out.println("avg_error_n : " + avg_error_n);
+
         save_weight();
     }
 
@@ -220,6 +224,53 @@ public class brain {
 
     private void save_weight() {
         //TODO
+        good_weight = layer_weight;
+    }
+
+    public void test(ArrayList<Double[]> _test_dataset,ArrayList<Double[]> _test_desired_data){
+        this.test_dataset = _test_dataset;
+        this.test_desired_data = _test_desired_data;
+
+        //setup input data
+        for(int test_i = 0; test_i < test_dataset.size()-1 ; test_i++) {
+
+            //set dataset value to input node
+            for (int input_i = 0; input_i < neural_type[0]; input_i++) {
+                node[0][input_i] = test_dataset.get(test_i)[input_i];
+            }
+
+             for (int layer = 0; layer < neural_type.length - 1; layer++) {
+                test_eval(layer);
+            }
+            System.out.println(test_desired_data.get(test_i)[0] + ":"+ node[node.length-1][0] + ":" + (test_desired_data.get(test_i)[0] - node[node.length-1][0]) );
+        }
+    }
+
+    public void test_eval(int layer){
+        // W r_c X N r_1 = N+1 r_1
+        if(   good_weight[layer].cols != node[layer].length){
+            System.out.println("invalid matrix");
+            return;
+        }
+
+        double  sum_inputnode;
+        Double  outputnode[] = new Double[neural_type[layer+1]];
+
+        //mutiply matrix
+        for (int j = 0; j < neural_type[layer+1] ; j++){
+            double sum=0;
+            for(int k=0;k<node[layer].length;k++)
+            {
+                //w_ji : weight from input neuron j to neron i : in each layer
+                sum+=  good_weight[layer].data[j][k]  * node[layer][k] ;
+            }
+            // V_j = sum all input*weight i->j + biases
+            sum_inputnode = sum + biases;
+            // Y_j =  nonlinear ity activation_fn associated with neuron j //  Y_j  : output each node
+            outputnode[j] = actication_fn(sum_inputnode); // transpose
+        }
+        // O_k  =  output of neuron_node k in each layer
+        node[layer+1] = outputnode;
     }
 
 //    public double sum(int i , int j ){
