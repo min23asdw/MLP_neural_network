@@ -62,7 +62,7 @@ public class brain {
         while (N < maxEpoch){ //&& avg_error_n > minError){
 
             //setup input node
-//            int ran_dataset_i = (int) (Math.random() * ((dataset.size()) + 1));
+//            int ran_dataset_i = (int) (Math.random() * ((train_dataset.size()) ));
             int ran_dataset_i = 256; // debug
 
 
@@ -119,13 +119,13 @@ public class brain {
             int output_layer = node.length-1;
             delta_weight_outputnode(output_layer);
 
-            // hidden layer change_weight
+            //local gradient output_k= e_k * diff Y_k
+            // local gradient hidden_j = diff Y_j * ∑ (  W_kj  *  l_g k)
+
             for (int layer = layer_weight.length-1 ; layer >= 0  ; layer--) {
                 //TODO
                 int diff_fn = 1;
 
-                //local gradient output_k= e_k * diff Y_k
-                // local gradient hidden_j = diff Y_j * ∑ (  W_kj  *  l_g k)
                 double l_g = 0;
                 for (int j = 0; j < node[layer].length   ; j++){
                     double sum_j = 0;
@@ -134,46 +134,62 @@ public class brain {
                         sum_j += layer_weight[layer].data[k][j] * local_gradient_node[layer+1][k] ;
                     }
                     l_g  += sum_j;
-
                     local_gradient_node[layer][j] = l_g * diff_fn;
                 }
+            }
+            // hidden layer change_weight
+            // ∆weight_ji =   ɳ *  local_gradient_j * Y_i
 
-//                double hsum = 0;
-//                double local_gradient = hsum;
+            for (int layer = node.length-2 ; layer > 0  ; layer--) {
+                //TODO
+                delta_weight_hiddennode(layer);
 
             }
 
+            System.out.println(train_desired_data.get(ran_dataset_i)[0] + ":"+ node[node.length-1][0] + ":" + (train_desired_data.get(ran_dataset_i)[0] - node[node.length-1][0]) );
 
-            System.out.println(node[node.length-1][0]);
-            System.out.println(train_desired_data.get(ran_dataset_i)[0]);
             N++; // next epoch
         }
         save_weight();
     }
 
 
-    public void delta_weight_outputnode(int _layer){
-
+    public void delta_weight_outputnode(int layer){
         //TODO it should to global?
-        int prv_node_layer = _layer-1;
-        Matrix change_weight =  new Matrix(error_n.get(0).length, node[prv_node_layer].length ,false);
-
+        int weight_layer = layer-1;
+        Matrix change_weight =  new Matrix(error_n.get(0).length, node[layer-1].length ,false);
         //TODO
         int diff_fn = 1;
 
         //mutiply matrix
         for (int j = 0; j < error_n.get(0).length ; j++){
-            for(int i=0;i< node[prv_node_layer].length ; i++)
+            for(int i=0;i< node[layer-1].length ; i++)
             {
-
-                double delta_weight = learning_rate * (error_n.get(0)[j] * diff_fn * node[prv_node_layer][i] );
+                double delta_weight = learning_rate * (error_n.get(0)[j] * diff_fn * node[layer-1][i] );
                 change_weight.set(j,i,delta_weight);
             }
-
         }
-       layer_weight[prv_node_layer] = Matrix.plus_matrix(layer_weight[prv_node_layer],change_weight)  ;
-        
+       layer_weight[weight_layer] = Matrix.plus_matrix(layer_weight[weight_layer],change_weight)  ;
     }
+
+    public void delta_weight_hiddennode(int layer){
+
+        int weight_layer = layer-1;
+        Matrix change_weight =  new Matrix(node[layer].length, node[layer-1].length ,false);
+        //TODO
+        int diff_fn = 1;
+
+        //mutiply matrix
+        for (int j = 0; j < error_n.get(0).length ; j++){
+            for(int i=0;i< node[layer-1].length ; i++)
+            {
+                double delta_weight = learning_rate * (local_gradient_node[layer][j] * diff_fn * node[layer-1][i] );
+                change_weight.set(j,i,delta_weight);
+            }
+        }
+        layer_weight[weight_layer] = Matrix.plus_matrix(layer_weight[weight_layer],change_weight)  ;
+    }
+
     public void node_eval(int layer){
         // W r_c X N r_1 = N+1 r_1
         if(   layer_weight[layer].cols != node[layer].length){
@@ -214,21 +230,7 @@ public class brain {
 //        return sum + biases;
 //
 //    }
-    public double input_act_fn(Double x){
 
-//        return 1 / (1 + Math.exp(-x));
-      return  x;
-    }
-    public double hidden_act_fn(Double x){
-
-        return 1 / (1 + Math.exp(-x));
-//        return  x;
-    }
-    public double output_act_fn(Double x){
-
-//        return 1 / (1 + Math.exp(-x));
-        return  x;
-    }
     public double actication_fn(Double x){
 
 //        return 1 / (1 + Math.exp(-x));\
