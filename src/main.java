@@ -5,76 +5,77 @@ import java.util.ArrayList;
 
 public class main {
 
-//    private double minValue;
-//    private double maxValue;
+    private static ArrayList<ArrayList<Double[]>> test_dataset = new ArrayList<>();
+    private static ArrayList<ArrayList<Double[]>> test_desired_data = new ArrayList<>();
+
+    private static ArrayList<ArrayList<Double[]>> train_dataset = new ArrayList<>();
+    private static ArrayList<ArrayList<Double[]>> train_desired_data = new ArrayList<>();
+
+    //TODO
+    private static int NumberOftest = 1;
 
     public static void main(String[] args) throws IOException {
-        ArrayList<Double[]> test_dataset_1 = new ArrayList<>();
-        ArrayList<Double[]> test_desired_data_1 = new ArrayList<>();
 
-        ArrayList<Double[]> train_dataset_1 = new ArrayList<>();
-        ArrayList<Double[]> train_desired_data_1 = new ArrayList<>();
+        for(int tain_i = 0 ; tain_i < NumberOftest ; tain_i ++) {
 
-        FileInputStream fstream = new FileInputStream("src/Flood_dataset.txt");
-        DataInputStream in = new DataInputStream(fstream);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String data;
+            ArrayList<Double[]> test_dataset_i = new ArrayList<>();
+            ArrayList<Double[]> test_desired_data_i = new ArrayList<>();
 
-//        double maxInput = 0;
-//        double minInput =  100000;
-//        double maxdesired = 0;
-//        double mindesired =  100000;
+            ArrayList<Double[]> train_dataset_i = new ArrayList<>();
+            ArrayList<Double[]> train_desired_data_i = new ArrayList<>();
 
-//        for(int tain_i = 0 ; tain_i < 1 ; tain_i ++) {
-        int tain_i = 0;
+
+            FileInputStream fstream = new FileInputStream("src/Flood_dataset.txt");
+            DataInputStream in = new DataInputStream(fstream);
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            String data;
 
             int line_i = 0;
             while ((data = br.readLine()) != null) { // each line
                 String[] tmp = data.split("\t");    //Split space
 
-                Double[] tmp_test_dataset = new Double[tmp.length-1];
-                Double[] tmp_test_desired_data = new Double[1];
-
-                Double[] tmp_train_dataset = new Double[tmp.length-1];
-                Double[] tmp_train_desired_data = new Double[1];
+                Double[] tmp_dataset = new Double[tmp.length-1];
+                Double[] tmp_desired_data = new Double[1];
 
                 int word_i = 0;
                 for (String t : tmp) {  // each word
-                    double tmp_val = Double.parseDouble(t);
+                    double tmp_val = (Double.parseDouble(t));//-95.0)/533.0;
 
-                    if (line_i % 10 == tain_i) { // test 10% data
                         if (word_i == tmp.length - 1) { //  desired_data
-                            tmp_test_desired_data[0] = tmp_val;
+                            tmp_desired_data[0] = (tmp_val)/600.0;
                         } else {
-                            tmp_test_dataset[word_i] = tmp_val;
+                            tmp_dataset[word_i] = (tmp_val)/600.0 ;
                         }
 
-                    } else { //train 90%
-                        if (word_i == tmp.length - 1) { //train_dataset
-                            tmp_train_desired_data[0] = tmp_val;
-                        } else {  // train_dataset
-                            tmp_train_dataset[word_i] = tmp_val;
-                        }
-                    }
                     word_i++;
                 }
 
-                if(tmp_test_dataset[0]!=null) test_dataset_1.add(tmp_test_dataset);
-                if(tmp_test_desired_data[0]!=null) test_desired_data_1.add(tmp_test_desired_data);
-
-                if(tmp_train_dataset[0]!= null) train_dataset_1.add(tmp_train_dataset);
-                if(tmp_train_desired_data[0]!=null) train_desired_data_1.add(tmp_train_desired_data);
-
+                if (line_i % (10) == tain_i) { // test 10% data
+                    test_dataset_i.add(tmp_dataset);
+                    test_desired_data_i.add(tmp_desired_data);
+                } else { //train 90%
+                    train_dataset_i.add(tmp_dataset);
+                    train_desired_data_i.add(tmp_desired_data);
+                }
                 line_i++;
             }
-//        }
+            test_dataset.add(test_dataset_i);
+            test_desired_data.add(test_desired_data_i);
+            train_dataset.add(train_dataset_i);
+            train_desired_data.add(train_desired_data_i);
+
+        }
 
 
-        brain b1 = new brain("85321", train_dataset_1 ,train_desired_data_1 ,50000,0.000001,0.000000013);
-        b1.train();
-        System.out.println("test");
-        b1.test(test_dataset_1 , test_desired_data_1 );
-
+        for(int test_i = 0 ; test_i < NumberOftest ; test_i ++) {
+            System.out.println("===================================================");
+            brain b1 = new brain("8,5,1", train_dataset.get(test_i), train_desired_data.get(test_i), 300, 0.0001, 0, 0.002, 0.1);
+            System.out.println("train: " + test_i);
+            b1.train();
+            System.out.println("test: " + test_i);
+            b1.test(test_dataset.get(test_i), test_desired_data.get(test_i));
+            System.out.println("===================================================");
+        }
     }
 
 
