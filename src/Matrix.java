@@ -38,11 +38,11 @@ public class Matrix {
 
     public static Matrix plus_matrix(Matrix a, Matrix b) {
         Matrix temp=new Matrix(a.rows,a.cols , false);
-        for(int i=0;i<a.rows;i++)
+        for(int j=0;j<a.rows;j++)
         {
-            for(int j=0;j<a.cols;j++)
+            for(int i=0;i<a.cols;i++)
             {
-                temp.data[i][j]=a.data[i][j]+b.data[i][j];
+                temp.data[j][i]=a.data[j][i]+b.data[j][i];
             }
         }
         return temp;
@@ -88,6 +88,7 @@ public class Matrix {
     public void set(int row, int col, double value) {
       this.data[row][col] = value;
     }
+
 //    public void add(int row, int col, double value) {
 //        this.data[row][col] += value;
 //    }
