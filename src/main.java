@@ -42,9 +42,9 @@ public class main {
                     double tmp_val = (Double.parseDouble(t));//-95.0)/533.0;
 
                         if (word_i == tmp.length - 1) { //  desired_data
-                            tmp_desired_data[0] = (tmp_val)/600.0;
+                            tmp_desired_data[0] = (tmp_val)/700.0;
                         } else {
-                            tmp_dataset[word_i] = (tmp_val)/600.0 ;
+                            tmp_dataset[word_i] = (tmp_val)/700.0 ;
                         }
 
                     word_i++;
@@ -69,7 +69,7 @@ public class main {
 
         for(int test_i = 0 ; test_i < NumberOftest ; test_i ++) {
             System.out.println("===================================================");
-            brain b1 = new brain("8,5,1", train_dataset.get(test_i), train_desired_data.get(test_i), 300, 0.0001, 0, 0.002, 0.1);
+            brain b1 = new brain("8,5,1", train_dataset.get(test_i), train_desired_data.get(test_i), 10000, 0.0001, 0, 0.02, 0.1);
             System.out.println("train: " + test_i);
             b1.train();
             System.out.println("test: " + test_i);
