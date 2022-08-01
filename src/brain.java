@@ -71,24 +71,29 @@ public class brain {
         int N =0;
         while (N < maxEpoch && avg_error_n > minError){ //
 
+            error_n.clear();
+
+
+
+
             for(int data = 0; data < train_dataset.size() ; data++) {
-            //setup input data
-            int ran_dataset_i = (int) (Math.random() * ((train_dataset.size()) ));
+              //setup input data
+                int ran_dataset_i = (int) (Math.random() * ((train_dataset.size()) ));
 
-            //set dataset value to input node
-            for(int input_i = 0 ; input_i < neural_type[0] ; input_i ++){
-                node[0][input_i] = train_dataset.get(ran_dataset_i)[input_i];
-            }
+                //set dataset value to input node
+                for(int input_i = 0 ; input_i < neural_type[0] ; input_i ++){
+                    node[0][input_i] = train_dataset.get(ran_dataset_i)[input_i];
+                }
 
-            //cal ∑(input x weight) -> activation_Fn  for each neuron_node
-            forward_pass();
+                //cal ∑(input x weight) -> activation_Fn  for each neuron_node
+                forward_pass();
 
-            get_error(ran_dataset_i , N);
-            backward_pass();
+                get_error(ran_dataset_i , N);
+                backward_pass();
 
-            double d = train_desired_data.get(ran_dataset_i)[0]*600 ;
-            double g = -node[node.length-1][0]*600;
-            System.out.println("desired:" + d + " get: "+ g + " error_n: " + (d-g));
+                double d = train_desired_data.get(ran_dataset_i)[0]*700 ;
+                double g = node[node.length-1][0]*700;
+                System.out.println("desired:" + d + " get: "+ g + " error_n: " + (d-g));
 
             }
 
@@ -121,8 +126,8 @@ public class brain {
                 return;
             }
 
-            double  sum_inputnode;
-            Double[] outputnode = new Double[neural_type[layer+1]];
+            double  sum_input;
+            Double[] sum_inputnode = new Double[neural_type[layer+1]];
 
             //mutiply matrix
             for (int j = 0; j < neural_type[layer+1] ; j++){
@@ -130,31 +135,30 @@ public class brain {
                 for(int k=0;k<node[layer].length;k++)
                 {
                     //w_ji : weight from input neuron j to neron i : in each layer
-                    sum+=  layer_weight[layer].data[j][k]  *  actication_fn( node[layer][k])  ;
+                     sum+=  layer_weight[layer].data[j][k]  *  activation_fn( node[layer][k])  ;
                 }
                 // V_j = sum all input*weight i->j + biases
-                sum_inputnode = sum + biases;
-                // Y_j =  nonlinear ity activation_fn associated with neuron j //  Y_j  : output each node
-                outputnode[j] = (sum_inputnode);
-
+                sum_input = sum + biases;
+                sum_inputnode[j] = sum_input;
             }
             // O_k  =  output of neuron_node k in each layer
-            node[layer+1] = outputnode;
+            node[layer+1] = sum_inputnode;
 
         }
     }
 
     private void get_error(int ran_dataset_i , int N) {
 
-        // ∑E(n) = 1/2 ∑ e^2 n  : sum of squared error at iteration n (sse)
+        // ∑E(n) = 1/2 ∑ e^2   : sum of squared error at iteration n (sse)
         int number_outputn_node  =   node[node.length-1].length;
         Double[] errors = new Double[number_outputn_node];
         for ( int outnode_j = 0 ; outnode_j < number_outputn_node ; outnode_j++) {
             //train_desired_data => d_j desired output for neuron_node j at iteration N // it have "one data"
             //e_j  = error at neuron j at iteration N
-            errors[outnode_j] =  train_desired_data.get(ran_dataset_i)[0] - node[node.length-1][outnode_j];
+            double desired = train_desired_data.get(ran_dataset_i)[0];
+            errors[outnode_j] =  desired -node[node.length-1][outnode_j];
             //TODO
-            double diff_fn  = diff_actication_fn(node.length-1 , outnode_j);
+            double diff_fn  = 1.0;//diff_activation_fn(node.length-1 , outnode_j);
             local_gradient_node[node.length-1][outnode_j] =  errors[outnode_j] *  diff_fn;
         }
         error_n.add(errors);
@@ -203,13 +207,12 @@ public class brain {
         //mutiply matrix
         for (int j = 0; j < error_n.get(0).length ; j++){
 
-            double diff_fn  = diff_actication_fn(layer , j);
+            double diff_fn  = diff_activation_fn(layer , j);
             for(int i=0;i< node[layer-1].length ; i++)
             {
                 double old_weight =  moment_rate * change_weight[weight_layer].data[j][i];
-                double delta_weight =  learning_rate * (error_n.get(0)[j] * diff_fn * node[layer-1][i]) ;
+                double delta_weight =  learning_rate * (error_n.get(0)[j] * diff_fn * activation_fn(node[layer-1][i])) ;
                 double delta =  old_weight  +  delta_weight;
-
                 change_weight[weight_layer].set(j,i,delta);
             }
         }
@@ -217,19 +220,18 @@ public class brain {
     }
     private void local_gradient() {
         for (int layer = layer_weight.length-1 ; layer >= 0  ; layer--) {
-            double l_g = 0;
             for (int j = 0; j < node[layer].length   ; j++){
 
-                double diff_fn  = diff_actication_fn(layer , j);
 
                 double sum_j = 0;
                 for(int k=0;k< node[layer+1].length  ; k++)
                 {
                     // TODO
-                    sum_j += layer_weight[layer].data[k][j] * ( local_gradient_node[layer+1][k]) ;
+                    sum_j +=  ( local_gradient_node[layer+1][k])  *  layer_weight[layer].data[k][j] ;
                 }
-                l_g  += sum_j;
-                local_gradient_node[layer][j] = l_g * diff_fn;
+
+                double diff_fn  = diff_activation_fn(layer , j);
+                local_gradient_node[layer][j] = sum_j * diff_fn;
             }
         }
     }
@@ -241,11 +243,10 @@ public class brain {
         //mutiply matrix
 
         for (int j = 0; j <  node[node_layer].length ; j++){
-
             for(int i=0;i< node[node_layer-1].length ; i++)
             {
                 double old_weight =  moment_rate * change_weight[weight_layer].data[j][i];
-                double delta_weight = learning_rate * ( local_gradient_node[node_layer][j] * node[node_layer-1][i]) ;
+                double delta_weight = learning_rate * ( local_gradient_node[node_layer][j] * activation_fn(node[node_layer-1][i])) ;
                 double delta = old_weight  +  delta_weight;
 
                 change_weight[weight_layer].set(j,i,delta);
@@ -273,26 +274,26 @@ public class brain {
 
             forward_pass();
 
-             double d = _test_desired_data.get(test_i)[0]*600 ;
-             double g = -node[node.length-1][0]*600;
+             double d = _test_desired_data.get(test_i)[0]*700 ;
+             double g = node[node.length-1][0]*700;
             System.out.println("desired:" + d  + "  get:" + g   + " err:" + (d-g));
         }
     }
 
 
 
-    public double actication_fn(Double x){
+    public double activation_fn(Double x){
         //TODO
-        return Math.max(0,x);
+        return Math.max(0.01,x);
 //        return (Math.exp(x)-Math.exp(-x))/(Math.exp(x)+Math.exp(-x)); // Tanh
 //        return 1 / (1 + Math.exp(-x)); //sigmoid
 //         return  x; // linear
     }
 
-    public double diff_actication_fn(int layer , int j ){
+    public double diff_activation_fn(int layer , int j ){
         //TODO
         if(node[layer][j]<=0){
-            return 0;
+            return 0.01;
         }else{
             return 1;
         }
