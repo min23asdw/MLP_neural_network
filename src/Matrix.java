@@ -10,7 +10,6 @@ public class Matrix {
      * @param cols i node
      */
 
-
     public Matrix(int rows, int cols , boolean random){
         data = new double[rows][cols];
         this.rows=rows;
@@ -24,17 +23,13 @@ public class Matrix {
                 {
                     double ran = 0;
                     while(ran == 0){
-//                        ran = Math.random()*2-1; //(-1 , 1)
-                    ran = generator.nextDouble(-1,1);
+                        ran = generator.nextDouble(-1,1);
                         data[j][i]=ran;
                     }
                 }
             }
-
         }
-
     }
-
 
     public static Matrix plus_matrix(Matrix a, Matrix b) {
         Matrix temp=new Matrix(a.rows,a.cols , false);
@@ -51,5 +46,4 @@ public class Matrix {
     public void set(int row, int col, double value) {
       this.data[row][col] = value;
     }
-
 }
