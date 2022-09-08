@@ -1,5 +1,3 @@
-
-
 import java.io.*;
 import java.util.ArrayList;
 
@@ -12,7 +10,7 @@ public class main {
     private static ArrayList<ArrayList<Double[]>> train_desired_data = new ArrayList<>();
 
     //TODO
-    private static int NumberOftest = 1;
+    private static int NumberOftest = 10;
 
     public static void main(String[] args) throws IOException {
 
@@ -39,12 +37,12 @@ public class main {
 
                 int word_i = 0;
                 for (String t : tmp) {  // each word
-                    double tmp_val = (Double.parseDouble(t));//-95.0)/533.0;
+                    double tmp_val = (Double.parseDouble(t)/700.0);  // norm
 
                         if (word_i == tmp.length - 1) { //  desired_data
-                            tmp_desired_data[0] = (tmp_val)/700.0;
+                            tmp_desired_data[0] = (tmp_val) ;
                         } else {
-                            tmp_dataset[word_i] = (tmp_val)/700.0 ;
+                            tmp_dataset[word_i] = (tmp_val)  ;
                         }
 
                     word_i++;
@@ -67,26 +65,16 @@ public class main {
         }
 
 
-        for(int test_i = 0 ; test_i < NumberOftest ; test_i ++) {
+        for(int test_i = 1 ; test_i < NumberOftest ; test_i ++) {
+//            int test_i = 0;
             System.out.println("===================================================");
-            brain b1 = new brain("8,5,1", train_dataset.get(test_i), train_desired_data.get(test_i), 10000, 0.0001, 0, 0.02, 0.1);
+            brain b1 = new brain("8,5,5,5,1", 5000, 0.00001, 1, 0.05, 0.9);
             System.out.println("train: " + test_i);
-            b1.train();
+            b1.train( train_dataset.get(test_i), train_desired_data.get(test_i));
             System.out.println("test: " + test_i);
             b1.test(test_dataset.get(test_i), test_desired_data.get(test_i));
             System.out.println("===================================================");
         }
     }
 
-
-    //frac{value - min}{max - min}
-//    public Double[] data_Normalization(Double[] x){
-//        Double[] norm = new Double[x.length];
-//
-//        for (int i = 0; i < x.length; i++) {
-//            norm[i] = x[i]-maxValue / maxValue - minValue;
-//        }
-////        return 1 / (1 + Math.exp(-x));
-//        return  norm;
-//    }
 }
