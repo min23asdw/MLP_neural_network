@@ -2,8 +2,8 @@ import java.util.ArrayList;
 
 public class brain {
     private final int[] neural_type;
-    private final ArrayList<Double[]> train_dataset;
-    private final ArrayList<Double[]> train_desired_data;
+    private ArrayList<Double[]> train_dataset;
+    private ArrayList<Double[]> train_desired_data;
 
 
     private final int maxEpoch;
@@ -11,24 +11,18 @@ public class brain {
     private final double learning_rate;
     private final double moment_rate;
 
-
-    private final ArrayList<Double[]> error_n = new ArrayList<>(); //sum of squared error at iteration n (sse)
+    //sum of squared error at iteration n (sse)
+    private final ArrayList<Double[]> error_n = new ArrayList<>();
     private double avg_error_n = 1000000000 ; // average sse of all epoch
     private double biases; // threshold connected : biases
 
     private Matrix[] layer_weight  ;
     private Matrix[] change_weight;
 
-
-//    private Matrix[] old_change_weight;
     private Double[][]  node  ;
-    private Double[][]  suminput_of_node  ;
     private Double[][]  local_gradient_node  ;
 
-
-
-
-    public brain(String _neural_type ,ArrayList<Double[]> _train_dataset,ArrayList<Double[]> _train_desired_data  , int _maxEpoch , double _minError ,double _biases, double  _learning_rate , double _moment_rate){
+    public brain(String _neural_type , int _maxEpoch , double _minError ,double _biases, double  _learning_rate , double _moment_rate){
 
         String[] splitArray = _neural_type.split(",");
         int[] array = new int[splitArray.length];
@@ -38,8 +32,7 @@ public class brain {
 
         init_Structor();
 
-        this.train_dataset = _train_dataset;
-        this.train_desired_data = _train_desired_data;
+
         this.maxEpoch = _maxEpoch;
         this.minError = _minError;
         this.biases = _biases;
@@ -67,20 +60,17 @@ public class brain {
 
     }
 
-    public void train(){
+    public void train(ArrayList<Double[]> _train_dataset,ArrayList<Double[]> _train_desired_data  ){
+        this.train_dataset = _train_dataset;
+        this.train_desired_data = _train_desired_data;
+
         int N =0;
         while (N < maxEpoch && avg_error_n > minError){ //
-
-            error_n.clear();
-
-
-
-
+            unique_random  uq = new unique_random(train_dataset.size());
             for(int data = 0; data < train_dataset.size() ; data++) {
-              //setup input data
-                int ran_dataset_i = (int) (Math.random() * ((train_dataset.size()) ));
-
-                //set dataset value to input node
+              //random  one dataset
+                int ran_dataset_i = uq.get_line();
+                //setup dataset value to input node
                 for(int input_i = 0 ; input_i < neural_type[0] ; input_i ++){
                     node[0][input_i] = train_dataset.get(ran_dataset_i)[input_i];
                 }
@@ -88,25 +78,37 @@ public class brain {
                 //cal ∑(input x weight) -> activation_Fn  for each neuron_node
                 forward_pass();
 
-                get_error(ran_dataset_i , N);
+                get_error(ran_dataset_i );
                 backward_pass();
 
                 double d = train_desired_data.get(ran_dataset_i)[0]*700 ;
-                double g = node[node.length-1][0]*700;
-                System.out.println("desired:" + d + " get: "+ g + " error_n: " + (d-g));
+                double g = activation_fn( node[node.length-1][0]*700 );
+//                System.out.println("desired:" + (int)d + " get: "+ g + "\t error_n: " + Math.abs(d-g));
 
             }
 
-            // avg_E(n) = 1/N ∑ E(n)  : avg (sse)
+
             double sum = 0.0;
             for (Double[] doubles : error_n) {
-                sum += Math.pow(doubles[0], 2);
+                // ∑E(n) = 1/2 ∑ e^2   : sum of squared error at iteration n (sse)
+
+                sum += 0.5*Math.pow(doubles[0], 2);
             }
+            // avg_E(n) = 1/N ∑ E(n)  : avg (sse)
             avg_error_n =  sum / (error_n.size());
 
+            error_n.clear();
 
-            System.out.println("epoch: " + N + "   avg_error_n: " + avg_error_n);
-            System.out.println("===================================================");
+
+
+//            if(N<=20){
+                System.out.println( N + " \t  "+ avg_error_n);
+//            }else{
+//                if(N%100==0){
+//                    System.out.println( N + " \t  "+ avg_error_n);
+//                }
+//            }
+
             N++; // next epoch
         }
 
@@ -135,7 +137,7 @@ public class brain {
                 for(int k=0;k<node[layer].length;k++)
                 {
                     //w_ji : weight from input neuron j to neron i : in each layer
-                     sum+=  layer_weight[layer].data[j][k]  *  activation_fn( node[layer][k])  ;
+                     sum += layer_weight[layer].data[j][k]  *  activation_fn( node[layer][k])  ;
                 }
                 // V_j = sum all input*weight i->j + biases
                 sum_input = sum + biases;
@@ -147,18 +149,17 @@ public class brain {
         }
     }
 
-    private void get_error(int ran_dataset_i , int N) {
+    private void get_error(int ran_dataset_i ) {
 
-        // ∑E(n) = 1/2 ∑ e^2   : sum of squared error at iteration n (sse)
         int number_outputn_node  =   node[node.length-1].length;
         Double[] errors = new Double[number_outputn_node];
         for ( int outnode_j = 0 ; outnode_j < number_outputn_node ; outnode_j++) {
             //train_desired_data => d_j desired output for neuron_node j at iteration N // it have "one data"
             //e_j  = error at neuron j at iteration N
             double desired = train_desired_data.get(ran_dataset_i)[0];
-            errors[outnode_j] =  desired -node[node.length-1][outnode_j];
+            errors[outnode_j] =  desired -  activation_fn( node[node.length-1][outnode_j] )  ;
             //TODO
-            double diff_fn  = 1.0;//diff_activation_fn(node.length-1 , outnode_j);
+            double diff_fn  = diff_activation_fn(node[node.length-1 ][outnode_j]);  // node[node.length-1 ][outnode_j]
             local_gradient_node[node.length-1][outnode_j] =  errors[outnode_j] *  diff_fn;
         }
         error_n.add(errors);
@@ -191,27 +192,22 @@ public class brain {
         }
 
         for (int weight_layer = layer_weight.length-1 ; weight_layer >= 0  ; weight_layer--) {
-
-                   layer_weight[weight_layer] = Matrix.plus_matrix(layer_weight[weight_layer], change_weight[weight_layer])  ;
-
+            layer_weight[weight_layer] = Matrix.plus_matrix(layer_weight[weight_layer], change_weight[weight_layer])  ;
         }
     }
 
 
 
     public void delta_weight_outputnode(int layer){
-        //TODO it should to global?
         int weight_layer = layer-1;
-//        output_change_weight =  new Matrix(error_n.get(0).length, node[layer-1].length ,false);
-//
         //mutiply matrix
-        for (int j = 0; j < error_n.get(0).length ; j++){
+        for (int j = 0; j < error_n.get(error_n.size()-1).length ; j++){
 
-            double diff_fn  = diff_activation_fn(layer , j);
+            double diff_fn  = diff_activation_fn(node[layer][j]);
             for(int i=0;i< node[layer-1].length ; i++)
             {
                 double old_weight =  moment_rate * change_weight[weight_layer].data[j][i];
-                double delta_weight =  learning_rate * (error_n.get(0)[j] * diff_fn * activation_fn(node[layer-1][i])) ;
+                double delta_weight =  learning_rate * (error_n.get(error_n.size()-1)[j] * diff_fn * activation_fn(node[layer-1][i])) ;
                 double delta =  old_weight  +  delta_weight;
                 change_weight[weight_layer].set(j,i,delta);
             }
@@ -222,26 +218,20 @@ public class brain {
         for (int layer = layer_weight.length-1 ; layer >= 0  ; layer--) {
             for (int j = 0; j < node[layer].length   ; j++){
 
-
                 double sum_j = 0;
                 for(int k=0;k< node[layer+1].length  ; k++)
                 {
-                    // TODO
                     sum_j +=  ( local_gradient_node[layer+1][k])  *  layer_weight[layer].data[k][j] ;
                 }
 
-                double diff_fn  = diff_activation_fn(layer , j);
+                double diff_fn  = diff_activation_fn(node[layer][j]);  // node[layer][j]
                 local_gradient_node[layer][j] = sum_j * diff_fn;
             }
         }
     }
     public void delta_weight_hiddennode(int weight_layer){
-
-
         int node_layer = weight_layer+1;
-
         //mutiply matrix
-
         for (int j = 0; j <  node[node_layer].length ; j++){
             for(int i=0;i< node[node_layer-1].length ; i++)
             {
@@ -274,10 +264,33 @@ public class brain {
 
             forward_pass();
 
+            int number_outputn_node  =   node[node.length-1].length;
+            Double[] errors = new Double[number_outputn_node];
+            for ( int outnode_j = 0 ; outnode_j < number_outputn_node ; outnode_j++) {
+                double desired = _test_desired_data.get(test_i)[0];
+                errors[outnode_j] =  desired -node[node.length-1][outnode_j];
+            }
+            error_n.add(errors);
+
+
              double d = _test_desired_data.get(test_i)[0]*700 ;
              double g = node[node.length-1][0]*700;
-            System.out.println("desired:" + d  + "  get:" + g   + " err:" + (d-g));
+            System.out.println("desired:" + (int)d + " get: "+ g + "\t error_n: " + Math.abs(d-g));
+
         }
+
+        double sum = 0.0;
+        for (Double[] doubles : error_n) {
+            // ∑E(n) = 1/2 ∑ e^2   : sum of squared error at iteration n (sse)
+
+            sum += 0.5*Math.pow(doubles[0], 2);
+        }
+        // avg_E(n) = 1/N ∑ E(n)  : avg (sse)
+        avg_error_n =  sum / (error_n.size());
+
+        System.out.println("avg_error_n final : " + avg_error_n);
+
+        error_n.clear();
     }
 
 
@@ -290,16 +303,16 @@ public class brain {
 //         return  x; // linear
     }
 
-    public double diff_activation_fn(int layer , int j ){
+    public double diff_activation_fn(Double v ){
         //TODO
-        if(node[layer][j]<=0){
+        if(v<=0){
             return 0.01;
         }else{
             return 1;
         }
 
-//        return   1.0 - (node[layer][j] * node[layer][j] ); //Tanh
-//      return node[layer][j] * (1 - node[layer][j]); //sigmoid
+//        return   1.0 - (Math.pow(activation_fn(v) , 2 )  ); //Tanh
+//      return activation_fn(v) * (1 - activation_fn(v); //sigmoid
 //      return 1; //linear
     }
 
